@@ -10,11 +10,16 @@ import firebase from './firebaseConnection';
 
 function App() {
 
+  const [email, setEmail] = useState('');
+  const [senha, setSenha] = useState('');
+
+  
   const [idPost, setIdPost] = useState('');  
   const [titulo, setTitulo] = useState('');
   const [autor, setAutor] = useState('');
   const [posts, setPosts] = useState([]);
 
+  
 useEffect(() =>{
 
 async function loadPosts() {
@@ -149,11 +154,45 @@ loadPosts();
 
   }
 
+
+ async function addNewUser(){
+    
+    await firebase.auth().createUserWithEmailAndPassword(email, senha)
+
+    .then(() => {
+      alert('Usuário cadastrado com sucesso')
+    })
+    .catch((error) => {
+        if(error.code == 'auth/weak-password'){
+          alert('senha fraca')
+          setSenha('')
+        }
+    })
+  }
+
   return (
     <div className="App">
         <h1> React JS + Firebase </h1> <br/>
         
         <div className='container'>
+        <h2>Cadastro de usuários</h2>
+          <label>Email</label>
+          <input type='text' value={email} onChange={(e) => setEmail(e.target.value)}/>
+
+          <br/>
+
+          <label>Senha</label>
+          <input type='password' value={senha} onChange={(e) => setSenha(e.target.value)}/>
+
+          <br/>
+
+          <button onClick={addNewUser}>cadastrar novo usuário</button>
+
+        </div>
+
+        <hr/>
+        <div className='container'>
+        <h2>Banco de Dados</h2>
 
         <label>ID</label>
         <input type='text' value={idPost}  onChange={(e) => setIdPost(e.target.value)}/>
