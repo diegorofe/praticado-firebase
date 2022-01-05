@@ -10,7 +10,7 @@ import firebase from './firebaseConnection';
 
 function App() {
 
-
+  const [idPost, setIdPost] = useState('');  
   const [titulo, setTitulo] = useState('');
   const [autor, setAutor] = useState('');
   const [posts, setPosts] = useState([]);
@@ -118,10 +118,45 @@ loadPosts();
     // })
   }
 
+  async function editPost () {
+    
+    await firebase.firestore().collection('posts')
+    .doc(idPost)
+    .update({
+      titulo: titulo,
+      autor: autor
+    })
+
+    .then(() => {
+      console.log('dados atualizados com sucesso!')
+      setTitulo('');
+      setIdPost('');
+      setAutor('');
+    })
+
+    .catch((error) => {
+      console.log('Erro ao atualizar: ' + error)
+    })
+  }
+
+ async function deletePost(id){
+    await firebase.firestore().collection('posts').doc(id)
+    .delete()
+    .then(() => {
+      alert('O post ' + id + ' foi deletado com sucesso!')
+    })
+
+
+  }
+
   return (
     <div className="App">
         <h1> React JS + Firebase </h1> <br/>
+        
         <div className='container'>
+
+        <label>ID</label>
+        <input type='text' value={idPost}  onChange={(e) => setIdPost(e.target.value)}/>
 
         <label>Titulo</label>
         <textarea typeof='text' value={titulo} onChange={(e) => setTitulo(e.target.value)} />
@@ -131,13 +166,17 @@ loadPosts();
 
         <button onClick={handleAdd}>Cadastrar</button>
         <button onClick={searchPost}>Busca post</button>
+        <button onClick={editPost}>EditarPost</button>
         <br/>
         <ul>
           {posts.map((post) =>{
             return(
               <li key={post.id}>
+                <span> ID - {post.id} </span> <br/>
                 <span>Titulo: {post.titulo}</span> <br/>
-                <span>Autor: {post.autor}</span> <br/> <br/>
+                <span>Autor: {post.autor}</span> <br/>
+                <button onClick={() => deletePost(post.id)} >Excluir</button> 
+                <hr/>
               </li>
             )
           })}
