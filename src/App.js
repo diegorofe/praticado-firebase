@@ -13,11 +13,16 @@ function App() {
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
 
+  const [user, setUser] = useState(false);
+  const [userLogged, setUserLogged] = useState({})
+
   
   const [idPost, setIdPost] = useState('');  
   const [titulo, setTitulo] = useState('');
   const [autor, setAutor] = useState('');
   const [posts, setPosts] = useState([]);
+
+  
 
   
 useEffect(() =>{
@@ -44,6 +49,31 @@ loadPosts();
 
 }, []);
 
+
+useEffect(() => {
+
+async function checkLogin() {
+  await firebase.auth().onAuthStateChanged((user) => {
+    
+    //se tem usuário logado
+    if(user){
+      setUser(true);
+      setUserLogged({
+        uid: user.uid,
+        email: user.email
+      })
+
+      //se não tem usuário logado
+    }else{
+      setUser(false);
+      setUserLogged({});
+    }
+  })
+}
+
+checkLogin();
+
+}, []);
 
   async function handleAdd() {
   
@@ -170,10 +200,37 @@ loadPosts();
     })
   }
 
+  async function login(){
+
+    await firebase.auth().signInWithEmailAndPassword(email, senha)
+    .then((value) => {
+      console.log(value)
+    })
+    .catch((error) => {
+      alert('erro ao fazer login ' + error)
+    })
+
+  }
+
+  async function logout() {
+    await firebase.auth().signOut();
+    alert('usuario off')
+    setEmail('')
+    setSenha('')
+    
+  }
+
   return (
     <div className="App">
         <h1> React JS + Firebase </h1> <br/>
         
+        {user && (
+          <div>
+            <strong>Seja bem vindo! </strong>
+            <span>{userLogged.uid} - { userLogged.email}</span>
+          </div>
+        )}
+
         <div className='container'>
         <h2>Cadastro de usuários</h2>
           <label>Email</label>
@@ -185,8 +242,9 @@ loadPosts();
           <input type='password' value={senha} onChange={(e) => setSenha(e.target.value)}/>
 
           <br/>
-
+          <button onClick={login}>Fazer login</button>
           <button onClick={addNewUser}>cadastrar novo usuário</button>
+          <button onClick={logout}>Sair</button>
 
         </div>
 
@@ -203,6 +261,7 @@ loadPosts();
         <label>Autor</label>
         <input type='text' value={autor}  onChange={(e) => setAutor(e.target.value)}/>
 
+        
         <button onClick={handleAdd}>Cadastrar</button>
         <button onClick={searchPost}>Busca post</button>
         <button onClick={editPost}>EditarPost</button>
