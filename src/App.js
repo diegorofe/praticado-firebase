@@ -12,9 +12,13 @@ function App() {
 
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
-
+  const [cargo, setCargo] = useState('');
+  const [nome, setNome] = useState('');
+  
   const [user, setUser] = useState(false);
-  const [userLogged, setUserLogged] = useState({})
+  const [userLogged, setUserLogged] = useState({});
+
+  const [dataUser, setDataUser] = useState({});
 
   
   const [idPost, setIdPost] = useState('');  
@@ -24,30 +28,30 @@ function App() {
 
   
 
-  
-useEffect(() =>{
+  //carrega lista de posts
+// useEffect(() =>{
 
-async function loadPosts() {
-  await firebase.firestore().collection('posts')
-  .onSnapshot((doc) =>{
-    let meusPosts = [];
+// async function loadPosts() {
+//   await firebase.firestore().collection('posts')
+//   .onSnapshot((doc) =>{
+//     let meusPosts = [];
 
-    doc.forEach((item) => {
-      meusPosts.push({
-        id: item.id,
-        titulo: item.data().titulo,
-        autor: item.data().autor,
-      })
-    });
+//     doc.forEach((item) => {
+//       meusPosts.push({
+//         id: item.id,
+//         titulo: item.data().titulo,
+//         autor: item.data().autor,
+//       })
+//     });
 
-    setPosts(meusPosts);
+//     setPosts(meusPosts);
 
-  })
-}
+//   })
+// }
 
-loadPosts();
+// loadPosts();
 
-}, []);
+// }, []);
 
 
 useEffect(() => {
@@ -189,13 +193,31 @@ checkLogin();
     
     await firebase.auth().createUserWithEmailAndPassword(email, senha)
 
-    .then(() => {
-      alert('Usuário cadastrado com sucesso')
+    .then( async (value) => {
+      
+      await firebase.firestore().collection('users')
+      .doc(value.user.uid)
+      .set({
+        nome: nome,
+        cargo: cargo,
+        status: true,
+      })
+      .then(() => {
+        setNome('');
+        setCargo('');
+        setEmail('')
+        setSenha('');
+      })
+
     })
     .catch((error) => {
         if(error.code == 'auth/weak-password'){
           alert('senha fraca')
-          setSenha('')
+          setSenha('');
+        }else if(error.code == 'auth/email-already-in-use'){
+          alert('Email j[a cadastrado!')
+          setEmail('');
+          setSenha('');
         }
     })
   }
@@ -203,8 +225,22 @@ checkLogin();
   async function login(){
 
     await firebase.auth().signInWithEmailAndPassword(email, senha)
-    .then((value) => {
-      console.log(value)
+    .then(async (value) => {
+      
+      await firebase.firestore().collection('users')
+
+    .doc(value.user.uid)
+    .get()
+    .then((snapshot) => {
+      setDataUser({
+        nome: snapshot.data().nome,
+        cargo: snapshot.data().cargo,
+        status: snapshot.data().status,
+        email: value.user.email
+      });
+
+    })
+
     })
     .catch((error) => {
       alert('erro ao fazer login ' + error)
@@ -223,16 +259,27 @@ checkLogin();
   return (
     <div className="App">
         <h1> React JS + Firebase </h1> <br/>
-        
+{/*         
         {user && (
           <div>
             <strong>Seja bem vindo! </strong>
             <span>{userLogged.uid} - { userLogged.email}</span>
           </div>
-        )}
+        )} */}
 
         <div className='container'>
         <h2>Cadastro de usuários</h2>
+        <label>Nome</label>
+          <input type='text' value={nome} onChange={(e) => setNome(e.target.value)}/>
+
+          <br/>
+
+          <label>Cargo</label>
+          <input type='text' value={cargo} onChange={(e) => setCargo(e.target.value)}/>
+
+          <br/>
+          
+          
           <label>Email</label>
           <input type='text' value={email} onChange={(e) => setEmail(e.target.value)}/>
 
@@ -242,14 +289,33 @@ checkLogin();
           <input type='password' value={senha} onChange={(e) => setSenha(e.target.value)}/>
 
           <br/>
-          <button onClick={login}>Fazer login</button>
+          <button onClick={login}>Fazer login</button> 
           <button onClick={addNewUser}>cadastrar novo usuário</button>
           <button onClick={logout}>Sair</button>
 
         </div>
 
         <hr/>
-        <div className='container'>
+
+        <br/>
+
+        {/*verifica a quantidade de chaves e renderiza*/}
+        {Object.keys(dataUser).length > 0 && (
+
+          <div>
+            <strong>Olá </strong> {dataUser.nome} <br/>
+            <strong>Cargo: </strong> {dataUser.cargo} <br/>
+            <strong>Olá </strong> {dataUser.email} <br/>
+            <strong>Olá </strong> {dataUser.status ? 'Ativo' : 'Inativo'} <br/>
+
+          </div>
+        )}
+
+
+        
+
+
+        {/* <div className='container'>
         <h2>Banco de Dados</h2>
 
         <label>ID</label>
@@ -279,7 +345,7 @@ checkLogin();
             )
           })}
         </ul>
-        </div>
+        </div> */}
  
 
     </div>
